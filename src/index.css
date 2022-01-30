@@ -5,9 +5,29 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+	font-size: 30px;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+p{
+	 display: inline; 
+} 
+::-webkit-scrollbar {display:none;}
+
+html {
+	scroll-behavior: smooth;
+	font-size: 30px;
+}
+
+.div {
+	margin: 0;
+	padding: 0;
+}
+
+.hidden { 
+	display:none;
 }
