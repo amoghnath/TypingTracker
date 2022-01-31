@@ -19,6 +19,10 @@ const useKey = (callback) => {
         return false;
       }
 
+	  if(key === "Enter"){
+		  e.preventDefault();
+	  }
+
       //prevents number codes and checks if the backspace is pressed
       if (key.length === 1 || key === "Backspace") {
         setKeyPressed(key);
@@ -45,7 +49,7 @@ const useKey = (callback) => {
       window.removeEventListener("keydown", keyDownHandler);
       window.removeEventListener("keyup", keyUpHandler);
     };
-  }, []);
+  }, [callback]);
   return keyPressed;
 };
 

@@ -1,20 +1,25 @@
-import {memo, useRef} from 'react'
-import Typography from './Typography'
+import { memo, useRef } from "react";
+import Typography from "./Typography";
 
 const nextCharStyling = {
-	background: "#fff",
-	borderStyle:"none none solid none",
-	display: "inline-block",
-	whiteSpace: "pre",
-	margin: "0px",
-	color: "gray"
-}
+  background: "#fff",
+  display: "inline-block",
+  whiteSpace: "pre",
+  margin: "0px",
+  color: "gray",
+  caretShape: "underscore",
+  caretColor: "black",
+  outline: "0px solid transparent"
 
-const NextCharTypography = memo(({children, ...props}) => {
-	let nextCharRef = useRef();
-	return (
-		<Typography ref={nextCharRef} id="cursor" style={nextCharStyling}>{children}</Typography>
-	)
-})
+};
+
+const NextCharTypography = memo(({ children, ...props }) => {
+  let nextCharRef = useRef();
+  return (
+    <Typography refs={nextCharRef} id="cursor" style={nextCharStyling} contentEditable="true" suppressContentEditableWarning={true}>
+      {children}
+    </Typography>
+  );
+});
 
 export default NextCharTypography;

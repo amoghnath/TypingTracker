@@ -1,6 +1,4 @@
 import React from "react";
-import cn from "classnames";
-import "./typography.css";
 
 const variantsMapping = {
   h1: "h1",
@@ -15,33 +13,32 @@ const variantsMapping = {
   body2: "p",
 };
 
+const CorrectTypographyStyling = {
+	color: "#006eff",
+}
 
-const Typography = ({ variant, color, children, ...props }) => {
-  const Component = variant ? variantsMapping[variant] : "p";
+const IncorrectTypographyStyling = {
+	color: "#eb5757",
+	textDecoration: "underline",
+	textDecorationColor: "rgba(235, 87, 87, 0.35)"
+}
 
+const Typography = ({children, ...props }) => {
   return (
-    <Component
-      className={cn({
-        [`typography--variant-${variant}`]: variant,
-        [`typography--color-${color}`]: color,
-      })}
+    <p
       {...props}
     >
       {children}
-    </Component>
+    </p>
   );
 };
 
-export const CorrectTypography = ({children}) => {
-	return (
-		<Typography color="primary">{children}</Typography>
-	)
-}
+export const CorrectTypography = ({ children }) => {
+  return <Typography style={CorrectTypographyStyling}>{children}</Typography>;
+};
 
-export const IncorrectTypography = ({children}) => {
-	return (
-		<Typography color="error">{children}</Typography>
-	)
-}
+export const IncorrectTypography = ({ children }) => {
+  return <Typography color="error" style={IncorrectTypographyStyling}>{children}</Typography>;
+};
 
 export default Typography;
