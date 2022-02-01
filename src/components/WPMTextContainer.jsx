@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import useKey from "../hooks/useKey";
 import TextCharacter from "./Typography/TextCharacter";
+import { CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 const WPMTextArea = ({ mainText }) => {
   //Declaring states with useState hooks
@@ -17,31 +19,35 @@ const WPMTextArea = ({ mainText }) => {
   const mainTextLines = useRef(mainText.split("\n"));
 
   const mainContainer = {
-	position: "absolute",
+    position: "absolute",
     top: "0",
     bottom: "0",
     left: "0",
     right: "0",
     margin: "auto",
     width: "1100px",
-    
-  }
+    fontSize: "35px",
+    wordWrap: "break-word",
+  };
 
   const infoContainer = {
-	float: "inherit",
-  }
+    float: "inherit",
+    fontSize: "20px",
+  };
 
   const scrollAble = {
-	overflowY: "scroll",
+    overflowY: "scroll",
     overflowX: "hidden",
     overflow: "hidden",
     userSelect: "none",
-	height: "140px",
-	marginTop: "100px"
+    height: "140px",
+    marginTop: "100px",
+    wordWrap: "break-word",
   };
 
   const lineDiv = {
     marginBottom: "8px",
+    wordWrap: "break-word",
   };
 
   //using the useKey hook
@@ -77,9 +83,12 @@ const WPMTextArea = ({ mainText }) => {
     }, 1000);
   }, []);
 
-  const stopTimer = useCallback(() => {
+  const stopTimer = useCallback((e) => {
     clearInterval(timer.current);
     timer.current = null;
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
   }, []);
 
   const lineToChars = useCallback((line) => {
@@ -90,41 +99,55 @@ const WPMTextArea = ({ mainText }) => {
       .map((c) => c);
   }, []);
 
-  useEffect(() => {
-    const characters = mainTextLines.current
-      .map((line) => lineToChars(line))
-      .flat();
-    setCharsToType(characters);
+  useEffect(
+    (e) => {
+      const characters = mainTextLines.current
+        .map((line) => lineToChars(line))
+        .flat();
+      setCharsToType(characters);
 
-    let cursor = document.getElementById("cursor");
-    let cursorLocation = cursor.parentNode;
-    cursorLocation.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-      inline: "start",
-    });
-    //cursor position code, in case of alternating the caret type
-    //sets cursor position and range
-    var range = document.createRange();
-    var sel = window.getSelection();
+      let cursor = document.getElementById("cursor");
+      let cursorLocation = cursor.parentNode;
+      cursorLocation.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+        inline: "start",
+      });
 
-    range.setStart(cursor.childNodes[0], cursor.length);
-    range.collapse(true);
+      //sets cursor position and range
+      var range = document.createRange();
+      var sel = window.getSelection();
 
-    sel.removeAllRanges();
-    sel.addRange(range);
+      range.setStart(cursor.childNodes[0], cursor.length);
+      range.collapse(true);
 
-    if (typingState.charsTyped.length >= 1) {
-      startTimer();
-    }
+      sel.removeAllRanges();
+      sel.addRange(range);
 
-    if (
-      typingState.charsTyped.length < 1 ||
-      (timer.current && charsToType.length - 1 <= typingState.charsTyped.length)
-    ) {
-      stopTimer();
-    }
-  }, [typingState.charsTyped, lineToChars, charsToType.length, startTimer, stopTimer]);
+      if (typingState.charsTyped.length >= 1) {
+        startTimer();
+      }
+
+      if (
+        timer.current &&
+        charsToType.length - 1 <= typingState.charsTyped.length
+      ) {
+        stopTimer(e);
+      }
+
+      if (typingState.charsTyped.length < 1) {
+        stopTimer(e);
+        setSecondsTime(0);
+      }
+    },
+    [
+      typingState.charsTyped,
+      lineToChars,
+      charsToType.length,
+      startTimer,
+      stopTimer,
+    ]
+  );
 
   let charCount = -1;
 
@@ -138,43 +161,60 @@ const WPMTextArea = ({ mainText }) => {
 
   return (
     <>
-	<div style={mainContainer}>
-      <div style={scrollAble} className="scrollableDiv">
-        {mainTextLines.current.map((line, i) => (
-          <div style={lineDiv} key={i}>
-            {lineToChars(line).map((chr) => {
-              charCount += 1;
-              return (
-                <TextCharacter
-                  chr={chr}
-                  key={charCount}
-                  id={charCount}
-                  charsTyped={typingState.charsTyped}
-                />
-              );
-            })}
-          </div>
-        ))}
+      <div style={mainContainer}>
+        <div style={scrollAble} className="scrollableDiv">
+          {mainTextLines.current.map((line, i) => (
+            <div style={lineDiv} key={i}>
+              {lineToChars(line).map((chr) => {
+                charCount += 1;
+                return (
+                  <TextCharacter
+                    chr={chr}
+                    key={charCount}
+                    id={charCount}
+                    charsTyped={typingState.charsTyped}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
-	</div>
-	<div style={infoContainer}>
-      <p>{`${isNaN(accuracy) ? 0 : accurateText}%`}</p>
-      <br />
-      <p>{`WPM:${isNaN(wpm)||!isFinite(wpm) ? 0 : (wpm).toFixed(0)}`}</p>
-      <br />
-      <p>{`${secondsTime.toFixed(0)}s`}</p>
-	  </div>
+      <div style={infoContainer}>
+        <kbd>{`${isNaN(accuracy) ? 0 : accurateText}%`} </kbd>
+        <kbd>{`WPM:${isNaN(wpm) || !isFinite(wpm) ? 0 : wpm.toFixed(0)}`} </kbd>
+        <div style={{ width: 100, height: 100 }}>
+          <CircularProgressbar
+            maxValue={60}
+            value={secondsTime.toFixed(0)}
+            text={`${secondsTime.toFixed(0)}`}
+            styles={{
+              path: {
+                stroke: "#ff79c6",
+              },
+              trail: {
+                // Trail color
+                stroke: "#fff",
+              },
+              text: {
+                // Text color
+                fill: "#ff79c6",
+                // Text size
+                fontSize: "32px",
+              },
+            }}
+          />
+        </div>
+        {/* <kbd>{`${secondsTime.toFixed(0)}s`}</kbd> */}
+      </div>
     </>
   );
 };
 
 const WPMTextContainer = () => {
-  const textToType = `There are many variations of but the majority have
-	suffered alteration.The autoimmune protocol diet
-	or AIP diet is a diet designed to help heal the
-	system in people who suffer from any autoimmune
-	disorders. This is a relatively new form of diet`;
-  return <WPMTextArea mainText={textToType} />;
+  const textToType = `There are many variations of but the majority have assignment suffered alteration.The autoimmune protocol diet or AIP diet is a diet designed to help heal the system in people who suffer from any autoimmune disorders. This is a relatively new form of diet`;
+  const rep = textToType.replace(/(?![^\n]{1,51}$)([^\n]{1,51})\s/g, "$1\n");
+  return <WPMTextArea mainText={rep} />;
 };
 
 export default WPMTextContainer;

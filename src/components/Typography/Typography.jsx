@@ -1,7 +1,7 @@
 import React from "react";
 
 const CorrectTypographyStyling = {
-	color: "#000",
+	color: "#D0B3FA",
 }
 
 const IncorrectTypographyStyling = {

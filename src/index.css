@@ -3,7 +3,6 @@ body {
   font-family: 'Roboto Mono', monospace;
 	-webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-size: 35px;
 }
 
 p {
@@ -16,6 +15,7 @@ p {
 
 html {
   scroll-behavior: smooth;
-  font-size: 30px;
+  background-color:#282A36;
+  color: #6272a4;
 }
 
