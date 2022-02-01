@@ -7,7 +7,7 @@ const textCharStyles = {
   display: "inline-block",
   whiteSpace: "pre",
   margin: "0px",
-  color: "gray"
+  color: "gray",
 };
 
 const TextCharacter = memo(
@@ -34,7 +34,7 @@ const TextCharacter = memo(
     ) {
       return false;
     } else {
-      return;
+      return true;
     }
   }
 );

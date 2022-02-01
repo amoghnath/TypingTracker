@@ -3,12 +3,13 @@ body {
   font-family: 'Roboto Mono', monospace;
 	-webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-size: 30px;
+  font-size: 35px;
 }
 
 p {
   display: inline;
 }
+
 ::-webkit-scrollbar {
   display: none;
 }
