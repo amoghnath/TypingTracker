@@ -10,6 +10,7 @@ const useKey = (callback) => {
 
       //prevents a key to be pressed repetitively
       if (e.repeat) {
+        e.preventDefault();
         return false;
       }
 
@@ -19,12 +20,12 @@ const useKey = (callback) => {
         return false;
       }
 
-	  if(key === "Enter"){
-		  e.preventDefault();
-	  }
+      if (key === "Enter") {
+        e.preventDefault();
+      }
 
       //prevents number codes and checks if the backspace is pressed
-      if (key.length === 1 || key === "Backspace") {
+      if (key === "Backspace" || key.length === 1) {
         setKeyPressed(key);
         callback && callback(key);
       }

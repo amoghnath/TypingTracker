@@ -13,7 +13,6 @@ const textCharStyles = {
 const TextCharacter = memo(
   ({ chr, id, charsTyped }) => {
     let CharTypography;
-
     if (id === charsTyped.length) {
       CharTypography = NextCharTypography;
     } else if (id >= charsTyped.length) {

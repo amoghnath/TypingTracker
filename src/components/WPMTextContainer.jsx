@@ -3,6 +3,8 @@ import useKey from "../hooks/useKey";
 import TextCharacter from "./Typography/TextCharacter";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import axios from "axios";
+import Loader from "./Loaders/Loader";
 
 const WPMTextArea = ({ mainText }) => {
   //Declaring states with useState hooks
@@ -13,6 +15,7 @@ const WPMTextArea = ({ mainText }) => {
   const [typingState, setTypingState] = useState(toTypeState);
   const [charsToType, setCharsToType] = useState([]);
   const [secondsTime, setSecondsTime] = useState(0);
+  //   const [incorrectWords, setIncorrectWords] = useState(0);
 
   //Declaring references (timer & text by lines)
   const timer = useRef(null);
@@ -27,12 +30,11 @@ const WPMTextArea = ({ mainText }) => {
     margin: "auto",
     width: "1100px",
     fontSize: "35px",
-    wordWrap: "break-word",
   };
 
   const infoContainer = {
     float: "inherit",
-    fontSize: "20px",
+    fontSize: "40px",
   };
 
   const scrollAble = {
@@ -42,7 +44,6 @@ const WPMTextArea = ({ mainText }) => {
     userSelect: "none",
     height: "140px",
     marginTop: "100px",
-    wordWrap: "break-word",
   };
 
   const lineDiv = {
@@ -105,40 +106,50 @@ const WPMTextArea = ({ mainText }) => {
         .map((line) => lineToChars(line))
         .flat();
       setCharsToType(characters);
-
       let cursor = document.getElementById("cursor");
-      let cursorLocation = cursor.parentNode;
-      cursorLocation.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-        inline: "start",
-      });
+
+      const cursorScrolling = () => {
+        let cursorLocation = cursor.parentNode;
+        cursorLocation.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "start",
+        });
+      };
 
       //sets cursor position and range
-      var range = document.createRange();
-      var sel = window.getSelection();
+      const cursorPosition = () => {
+        var range = document.createRange();
+        var sel = window.getSelection();
 
-      range.setStart(cursor.childNodes[0], cursor.length);
-      range.collapse(true);
+        range.setStart(cursor.childNodes[0], cursor.length);
+        range.collapse(true);
 
-      sel.removeAllRanges();
-      sel.addRange(range);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      };
 
-      if (typingState.charsTyped.length >= 1) {
-        startTimer();
-      }
+      const timerCheck = () => {
+        if (typingState.charsTyped.length >= 1) {
+          startTimer();
+        }
 
-      if (
-        timer.current &&
-        charsToType.length - 1 <= typingState.charsTyped.length
-      ) {
-        stopTimer(e);
-      }
+        if (
+          timer.current &&
+          charsToType.length - 1 <= typingState.charsTyped.length
+        ) {
+          stopTimer(e);
+        }
 
-      if (typingState.charsTyped.length < 1) {
-        stopTimer(e);
-        setSecondsTime(0);
-      }
+        if (typingState.charsTyped.length < 1) {
+          stopTimer(e);
+          setSecondsTime(0);
+        }
+      };
+
+      cursorScrolling();
+      cursorPosition();
+      timerCheck();
     },
     [
       typingState.charsTyped,
@@ -155,9 +166,17 @@ const WPMTextArea = ({ mainText }) => {
     return chr === charsToType[i] ? acc + 1 : acc;
   }, 0);
 
+  const incorrect = typingState.charsTyped.reduce((inacc, inaccChar, j) => {
+    return inaccChar !== charsToType[j] ? inacc + 1 : inacc;
+  }, 0);
+
   const accuracy = (correct / typingState.charsTyped.length) * 100;
   const accurateText = `${accuracy.toFixed(0)}`;
   const wpm = typingState.charsTyped.length / 5 / (secondsTime / 60);
+  const inAccuracy = (
+    (incorrect / typingState.charsTyped.length) *
+    100
+  ).toFixed(0);
 
   return (
     <>
@@ -181,10 +200,12 @@ const WPMTextArea = ({ mainText }) => {
         </div>
       </div>
       <div style={infoContainer}>
-        <kbd>{`${isNaN(accuracy) ? 0 : accurateText}%`} </kbd>
-        <kbd>{`WPM:${isNaN(wpm) || !isFinite(wpm) ? 0 : wpm.toFixed(0)}`} </kbd>
+        {/* <kbd>{incorrectWords} </kbd> */}
+        {/* <kbd>{`Inacc:${isNaN(inAccuracy) ? 0 : inAccuracy}`} </kbd> */}
+        {/* <kbd>{`${isNaN(accuracy) ? 0 : accurateText}%`} </kbd> */}
+        {/* <kbd>{`WPM:${isNaN(wpm) || !isFinite(wpm) ? 0 : wpm.toFixed(0)}`} </kbd> */}
         <div style={{ width: 100, height: 100 }}>
-          <CircularProgressbar
+          {/* <CircularProgressbar
             maxValue={60}
             value={secondsTime.toFixed(0)}
             text={`${secondsTime.toFixed(0)}`}
@@ -203,18 +224,43 @@ const WPMTextArea = ({ mainText }) => {
                 fontSize: "32px",
               },
             }}
-          />
+          /> */}
         </div>
-        {/* <kbd>{`${secondsTime.toFixed(0)}s`}</kbd> */}
       </div>
     </>
   );
 };
 
 const WPMTextContainer = () => {
-  const textToType = `There are many variations of but the majority have assignment suffered alteration.The autoimmune protocol diet or AIP diet is a diet designed to help heal the system in people who suffer from any autoimmune disorders. This is a relatively new form of diet`;
-  const rep = textToType.replace(/(?![^\n]{1,51}$)([^\n]{1,51})\s/g, "$1\n");
-  return <WPMTextArea mainText={rep} />;
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState("");
+  useEffect(() => {
+    const delay = async (sec) => {
+      return await new Promise((resolve) => setTimeout(resolve, sec));
+    };
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const { data: response } = await axios.get(
+          "https://random-word-api.herokuapp.com/word?number=200"
+        );
+        var s = response.slice(0, response.length - 1).join(" ");
+        setData(s.replace(/(?![^\n]{1,51}$)([^\n]{1,51})\s/g, "$1\n"));
+      } catch (error) {
+        console.error(error);
+      }
+	  setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <div>
+      {loading && <Loader />}
+      {!loading && <WPMTextArea mainText={data} />}
+    </div>
+  );
 };
 
 export default WPMTextContainer;
