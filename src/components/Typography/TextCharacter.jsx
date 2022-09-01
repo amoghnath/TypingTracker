@@ -8,6 +8,8 @@ const textCharStyles = {
   whiteSpace: "pre",
   margin: "0px",
   color: "gray",
+  userSelect: "none",
+  pointerEvents: "none"
 };
 
 const TextCharacter = memo(

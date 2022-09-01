@@ -9,7 +9,7 @@ const useKey = (callback) => {
       const { key, keyCode } = e;
 
       //prevents a key to be pressed repetitively
-      if (e.repeat) {
+      if (e.repeat && key !== "Backspace") {
         e.preventDefault();
         return false;
       }
@@ -31,8 +31,22 @@ const useKey = (callback) => {
       }
 
       //prevents the spacebar from scrolling the page
-      if (key === " " && e.target === document.body) {
+      if (key === " ") {
         e.preventDefault();
+      }
+      switch (keyCode) {
+        case 37:
+          e.preventDefault();
+          break;
+        case 38:
+          e.preventDefault();
+          break;
+        case 39:
+          e.preventDefault();
+          break;
+        case 40:
+          e.preventDefault();
+          break;
       }
     };
 
@@ -50,7 +64,7 @@ const useKey = (callback) => {
       window.removeEventListener("keydown", keyDownHandler);
       window.removeEventListener("keyup", keyUpHandler);
     };
-  }, [callback]);
+  }, []);
   return keyPressed;
 };
 

@@ -15,7 +15,6 @@ const WPMTextArea = ({ mainText }) => {
   const [typingState, setTypingState] = useState(toTypeState);
   const [charsToType, setCharsToType] = useState([]);
   const [secondsTime, setSecondsTime] = useState(0);
-  //   const [incorrectWords, setIncorrectWords] = useState(0);
 
   //Declaring references (timer & text by lines)
   const timer = useRef(null);
@@ -30,6 +29,7 @@ const WPMTextArea = ({ mainText }) => {
     margin: "auto",
     width: "1100px",
     fontSize: "35px",
+    fontWeight: "bold",
   };
 
   const infoContainer = {
@@ -40,9 +40,10 @@ const WPMTextArea = ({ mainText }) => {
   const scrollAble = {
     overflowY: "scroll",
     overflowX: "hidden",
-    overflow: "hidden",
+    overflow: "auto",
     userSelect: "none",
-    height: "140px",
+    height: "193px",
+    width: "100%",
     marginTop: "100px",
   };
 
@@ -74,7 +75,7 @@ const WPMTextArea = ({ mainText }) => {
 
   const startTimer = useCallback(() => {
     if (timer.current !== null) {
-      return;
+      return false;
     }
 
     var startInterval = Date.now();
@@ -84,12 +85,9 @@ const WPMTextArea = ({ mainText }) => {
     }, 1000);
   }, []);
 
-  const stopTimer = useCallback((e) => {
+  const stopTimer = useCallback(() => {
     clearInterval(timer.current);
     timer.current = null;
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
   }, []);
 
   const lineToChars = useCallback((line) => {
@@ -100,64 +98,76 @@ const WPMTextArea = ({ mainText }) => {
       .map((c) => c);
   }, []);
 
+  useEffect(() => {
+    const checkClick = () => {
+      var clickInsideWPMtext = document.getElementsByClassName("scrollableDiv");
+      document.body.addEventListener("click", function (event) {
+        if (clickInsideWPMtext[0].contains(event.target)) {
+          console.log("clicked inside");
+        } else {
+          console.log("clicked outside");
+        }
+      });
+    };
+    checkClick();
+  }, []);
+
+  useEffect(() => {
+    const characters = mainTextLines.current
+      .map((line) => lineToChars(line))
+      .flat();
+    setCharsToType(characters);
+  }, [lineToChars]);
+
+  useEffect(() => {
+    let cursor = document.getElementById("cursor");
+
+    const cursorScrolling = () => {
+      let cursorLocation = cursor.parentNode;
+      cursorLocation.scrollIntoView({
+        block: "start",
+        inline: "start",
+      });
+    };
+
+    //sets cursor position and range
+    const cursorPosition = () => {
+      var range = document.createRange();
+      var sel = window.getSelection();
+
+      range.setStart(cursor.childNodes[0], cursor.length);
+      range.collapse(true);
+
+      sel.removeAllRanges();
+      sel.addRange(range);
+    };
+    cursorScrolling();
+    cursorPosition();
+  }, [typingState.charsTyped]);
+
+  //   useEffect(() => {
+  //     if (parseInt(secondsTime.toFixed(0)) === 10) {
+  //       setWpmVisibility(false);
+  //     }
+  //   }, [secondsTime]);
+
   useEffect(
     (e) => {
-      const characters = mainTextLines.current
-        .map((line) => lineToChars(line))
-        .flat();
-      setCharsToType(characters);
-      let cursor = document.getElementById("cursor");
+      if (typingState.charsTyped.length === 1) {
+        startTimer();
+      }
 
-      const cursorScrolling = () => {
-        let cursorLocation = cursor.parentNode;
-        cursorLocation.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-          inline: "start",
-        });
-      };
+      if (charsToType.length - 1 <= typingState.charsTyped.length) {
+        stopTimer(e);
+      }
 
-      //sets cursor position and range
-      const cursorPosition = () => {
-        var range = document.createRange();
-        var sel = window.getSelection();
-
-        range.setStart(cursor.childNodes[0], cursor.length);
-        range.collapse(true);
-
-        sel.removeAllRanges();
-        sel.addRange(range);
-      };
-
-      const timerCheck = () => {
-        if (typingState.charsTyped.length >= 1) {
-          startTimer();
-        }
-
-        if (
-          timer.current &&
-          charsToType.length - 1 <= typingState.charsTyped.length
-        ) {
-          stopTimer(e);
-        }
-
-        if (typingState.charsTyped.length < 1) {
-          stopTimer(e);
-          setSecondsTime(0);
-        }
-      };
-
-      cursorScrolling();
-      cursorPosition();
-      timerCheck();
+      if (typingState.charsTyped.length < 1) {
+        stopTimer(e);
+        setSecondsTime(0);
+      }
     },
-    [
-      typingState.charsTyped,
-      lineToChars,
-      charsToType.length,
-      startTimer,
-      stopTimer,
-    ]
+
+    [typingState.charsTyped, charsToType.length]
   );
 
   let charCount = -1;
@@ -166,18 +176,9 @@ const WPMTextArea = ({ mainText }) => {
     return chr === charsToType[i] ? acc + 1 : acc;
   }, 0);
 
-  const incorrect = typingState.charsTyped.reduce((inacc, inaccChar, j) => {
-    return inaccChar !== charsToType[j] ? inacc + 1 : inacc;
-  }, 0);
-
   const accuracy = (correct / typingState.charsTyped.length) * 100;
   const accurateText = `${accuracy.toFixed(0)}`;
   const wpm = typingState.charsTyped.length / 5 / (secondsTime / 60);
-  const inAccuracy = (
-    (incorrect / typingState.charsTyped.length) *
-    100
-  ).toFixed(0);
-
   return (
     <>
       <div style={mainContainer}>
@@ -199,13 +200,12 @@ const WPMTextArea = ({ mainText }) => {
           ))}
         </div>
       </div>
+
       <div style={infoContainer}>
-        {/* <kbd>{incorrectWords} </kbd> */}
-        {/* <kbd>{`Inacc:${isNaN(inAccuracy) ? 0 : inAccuracy}`} </kbd> */}
-        {/* <kbd>{`${isNaN(accuracy) ? 0 : accurateText}%`} </kbd> */}
-        {/* <kbd>{`WPM:${isNaN(wpm) || !isFinite(wpm) ? 0 : wpm.toFixed(0)}`} </kbd> */}
+        <kbd>{`${isNaN(accuracy) ? 0 : accurateText}%`} </kbd>
+        <kbd>{`WPM:${isNaN(wpm) || !isFinite(wpm) ? 0 : wpm.toFixed(0)}`} </kbd>
         <div style={{ width: 100, height: 100 }}>
-          {/* <CircularProgressbar
+          <CircularProgressbar
             maxValue={60}
             value={secondsTime.toFixed(0)}
             text={`${secondsTime.toFixed(0)}`}
@@ -215,16 +215,16 @@ const WPMTextArea = ({ mainText }) => {
               },
               trail: {
                 // Trail color
-                stroke: "#fff",
+                stroke: "#E5E5E5",
               },
               text: {
                 // Text color
-                fill: "#ff79c6",
+                fill: "#000",
                 // Text size
                 fontSize: "32px",
               },
             }}
-          /> */}
+          />
         </div>
       </div>
     </>
@@ -234,13 +234,16 @@ const WPMTextArea = ({ mainText }) => {
 const WPMTextContainer = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState("");
+
   useEffect(() => {
     const delay = async (sec) => {
       return await new Promise((resolve) => setTimeout(resolve, sec));
     };
+
     const fetchData = async () => {
       setLoading(true);
       try {
+        await delay(1000);
         const { data: response } = await axios.get(
           "https://random-word-api.herokuapp.com/word?number=200"
         );
@@ -249,7 +252,7 @@ const WPMTextContainer = () => {
       } catch (error) {
         console.error(error);
       }
-	  setLoading(false);
+      setLoading(false);
     };
 
     fetchData();

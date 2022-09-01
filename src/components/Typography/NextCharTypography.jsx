@@ -10,7 +10,8 @@ const nextCharStyling = {
   border: "0",
   userSelect: "none",
   outline: "0px solid transparent",
-  caretColor: "yellow",
+  caretColor: "black",
+  pointerEvents: "none"
 };
 
 const NextCharTypography = memo(({ children, ...props }) => {
